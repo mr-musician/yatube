@@ -11,7 +11,7 @@ def permission_denied_view(request, exception):
     )
 
 
-def server_error(request, exception):
+def server_error(request):
     return render(
-        request, 'core/500.html', {'path': request.path}, status=500
+        request, 'core/500.html', status=500
     )
