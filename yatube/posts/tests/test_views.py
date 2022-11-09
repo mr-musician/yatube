@@ -443,6 +443,13 @@ class FollowTest(TestCase):
             ).exists()
         )
 
+        # Пользователь не может подписаться сам на себя
+        self.assertFalse(
+            Follow.objects.filter(
+                user=FollowTest.user, author=FollowTest.user
+            ).exists()
+        )
+
     def test_profile_unfollow(self):
         """
         Авторизованный пользователь может удалить из подписок другого

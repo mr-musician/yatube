@@ -9,3 +9,9 @@ def permission_denied_view(request, exception):
     return render(
         request, 'core/403csrf.html', {'path': request.path}, status=403
     )
+
+
+def server_error(request, exception):
+    return render(
+        request, 'core/500.html', {'path': request.path}, status=500
+    )
