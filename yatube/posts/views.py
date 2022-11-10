@@ -3,7 +3,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.cache import cache_page
 
 from .forms import PostForm, CommentForm
-from .models import Post, Group, User, Comment, Follow
+from .models import Post, Group, User, Follow
 from .utils import paginate
 
 
@@ -32,8 +32,8 @@ def profile(request, username):
     post_list = user.posts.select_related('author', 'group')
     page_obj = paginate(request, post_list)
     following = request.user.is_authenticated and Follow.objects.filter(
-            user=request.user, author=user
-        ).exists()
+        user=request.user, author=user
+    ).exists()
 
     context = {
         'author': user,
