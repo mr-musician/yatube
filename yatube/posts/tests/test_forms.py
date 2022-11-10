@@ -153,7 +153,7 @@ class PostCreateFormTest(TestCase):
         )
         form_data = {
             'text': 'Тестовый текст',
-            'image': uploaded,
+            'image': uploaded
         }
         response = self.authorized_client.post(
             reverse('posts:post_create'),
@@ -170,7 +170,7 @@ class PostCreateFormTest(TestCase):
         last_post = Post.objects.first()
         expect_answer = {
             last_post.text: form_data['text'],
-            str(last_post.image): str(last_post.image),
+            str(last_post.image): f'posts/{form_data["image"]}'
         }
         for obj, answer in expect_answer.items():
             with self.subTest(obj=obj):

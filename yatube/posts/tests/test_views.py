@@ -16,18 +16,6 @@ User = get_user_model()
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
 
-'''
-В уроке про setUp() было краткое упоминание setUpModule()
-
-def setUpModule():
-    Вызывается один раз перед всеми классами, которые есть в файле.
-
-В целях сокращения кода имеет ли смысл все атрибуты из setUpClass затолкать в
-него? К сожалению, ни в документации, ни в stack'е я каких-то примеров толковых
-по реализации чего-то подобного не смог найти.
-'''
-
-
 class ContextTest(TestCase):
     @classmethod
     def setUpClass(cls):
@@ -197,21 +185,41 @@ class PaginatorTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls.group = Group.objects.create(
+            title='Тестовая группа',
+            slug='test_slug',
+            description='Тестовое описание группы'
+        )
         cls.user = User.objects.create_user(username='HasNoName')
         for i in range(13):
             Post.objects.create(
                 author=cls.user,
-                text='Тестовый текст.'
+                text='Тестовый текст.',
+                group=cls.group
             )
         cache.clear()
 
-    def test_paginator_first_page(self):
-        response = self.client.get(reverse('posts:index'))
-        self.assertEqual(len(response.context['page_obj']), 10)
-
-    def test_paginator_second_page(self):
-        response = self.client.get(reverse('posts:index'), {'page': 2})
-        self.assertEqual(len(response.context['page_obj']), 3)
+    def test_paginator_for_pages(self):
+        reverse_list = [
+            reverse('posts:index'),
+            reverse(
+                'posts:group_list',
+                kwargs={'slug': f'{PaginatorTest.group.slug}'}
+            ),
+            reverse(
+                'posts:profile', kwargs={'username': f'{PaginatorTest.user}'}
+            )
+        ]
+        for element in reverse_list:
+            with self.subTest(element=element):
+                response = self.client.get(element)
+                self.assertEqual(
+                    len(response.context.get('page_obj')), settings.PGN_COUNT
+                )
+                response = self.client.get(element, {'page': 2})
+                self.assertEqual(
+                    len(response.context.get('page_obj')), 3
+                )
 
 
 class TemplateTest(TestCase):

@@ -31,12 +31,9 @@ def profile(request, username):
     user = get_object_or_404(User, username=username)
     post_list = user.posts.select_related('author', 'group')
     page_obj = paginate(request, post_list)
-    if request.user.is_authenticated:
-        following = Follow.objects.filter(
+    following = request.user.is_authenticated and Follow.objects.filter(
             user=request.user, author=user
         ).exists()
-    else:
-        following = False
 
     context = {
         'author': user,
@@ -48,10 +45,8 @@ def profile(request, username):
 
 def post_detail(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
-    posts_count = Post.objects.filter(author=post.author).count
-    comments = Comment.objects.filter(post_id=post.pk)
+    comments = post.comments.all()
     context = {
-        'posts_count': posts_count,
         'post': post,
         'form': CommentForm(),
         'comments': comments
@@ -61,7 +56,7 @@ def post_detail(request, post_id):
 
 @login_required
 def post_create(request):
-    form = PostForm(request.POST or None)
+    form = PostForm(request.POST or None, files=request.FILES or None)
     if request.method == 'POST':
         if form.is_valid():
             post = form.save(commit=False)
@@ -121,9 +116,8 @@ def follow_index(request):
 def profile_follow(request, username):
     author = get_object_or_404(User, username=username)
     if author == request.user:
-        return redirect('posts:follow_index')
-    if Follow.objects.filter(user=request.user, author=author).exists():
-        return redirect('posts:follow_index')
+        if Follow.objects.filter(user=request.user, author=author).exists():
+            return redirect('posts:follow_index')
     Follow.objects.create(
         user=request.user,
         author=author
@@ -137,6 +131,4 @@ def profile_unfollow(request, username):
     user = request.user
     if Follow.objects.filter(user=user, author=author).exists():
         Follow.objects.filter(user=user, author=author).delete()
-        return redirect('posts:profile', username=username)
-    else:
         return redirect('posts:profile', username=username)
